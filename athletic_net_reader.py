@@ -31,6 +31,38 @@ def is_end_of_results(s):
 
 
 class Race_Result():
+    """
+    This Race Result class provides a standardized container for saving, loading, and processing race data saved on athletic.net. 
+    It is designed to read a plain text file of the "All Results" athletic.net page for a given meet. Initial processing of race 
+    data shoud be done through the supporting get_race_results() function. Previously saved race results can be loaded via the 
+    Race_Result.load() method. Generally, the Race_Results.get_data() method is not intended to be run on its own. 
+
+    Attributes
+
+    file_name - string - name of the text file where the data was compiled from.
+    meet_name - string - official name of the meet
+    meet_location - string - official location of the meet
+    race_name - official name of the race
+    names - list of strings - names of participants
+    times - list of floats - finishing times of participants in seconds
+    schools - list of strings - school names for each participant
+    grades - list of ints - grade of each participant
+    qualified - list of bool - indicates if participant qualified for the next meet from this race
+    teams - list of string - list of school team names officially competeing in the race
+    team_scores - list of ints - scores for each competeing team
+    varsity - bool - is the meet a varsity meet
+    boys - bool - True indicates a boys race, False indicates a girls race
+    distance - float - length of race in meters
+    year - int - year this race took place
+
+    Methods
+
+    Race_Result.get_data(data,meet_name,year,meet_locations,race_name,boys,fname)
+
+    Race_Result.save()
+
+    Race_Result.load(meet_name,race_name_year)
+    """
     def __init__(self,):
         return 
     
