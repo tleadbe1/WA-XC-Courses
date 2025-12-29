@@ -59,14 +59,57 @@ class Race_Result():
 
     Race_Result.get_data(data,meet_name,year,meet_locations,race_name,boys,fname)
 
-    Race_Result.save()
+        data - list of str - lines of text from the athletic.net "all results" page. First line should be the race name and the last line should be 
+                                the last entry of the race (usually followed by another race name).
+        meet_name - str - Official name of the meet
+        meet_location - str - Official location of the meet
+        race_name - str - Official name of the race
+        boys - bool - True indicates a boys race, False indicates a girls race
+        fname - str - path and file name of where the original athletic.net page is stored as text
 
-    Race_Result.load(meet_name,race_name_year)
+        Return - self - Race_Result object - Given Race_Result object containing all the information about the race 
+
+    Race_Result.save()
+        
+        Saves the Race_Result as a zipped numpy object (.npz) with entries:
+
+            ind_header - list of str - header for the individual result data
+            team_header - list of str - header for the team result data
+            meet_header - list of str - header for the meet data
+            ind_data - numpy 2d array of mixed data - data for the individual results
+            team_data - numpy 2d array of mixed data - data for the team results
+            meet_data - numpy list of mixed data - meet information
+
+        Data is saved as self.meet_name + "_" + self.race_name + "_" + str(self.year) + ".npz"
+        
+        Return - None
+
+    Race_Result.load(meet_name,race_name,year)
+
+        Loads race data into this Race_Result object using:
+
+        meet_name - str - Official meet name
+        race_name - str - Official race name
+        year - int - year of the race
+
+        Return - None
+    
     """
     def __init__(self,):
         return 
     
     def get_data(self,data,meet_name,year,meet_location,race_name,boys,fname):
+        """
+        data - list of str - lines of text from the athletic.net "all results" page. First line should be the race name and the last line should be 
+                                the last entry of the race (usually followed by another race name).
+        meet_name - str - Official name of the meet
+        meet_location - str - Official location of the meet
+        race_name - str - Official name of the race
+        boys - bool - True indicates a boys race, False indicates a girls race
+        fname - str - path and file name of where the original athletic.net page is stored as text
+
+        Return - self - Race_Result object - Given Race_Result object containing all the information about the race 
+        """
         self.names = []
         self.times = []
         self.schools = []
@@ -123,6 +166,20 @@ class Race_Result():
         return self
 
     def save(self):
+        """
+        Saves the Race_Result as a zipped numpy object (.npz) with entries:
+
+            ind_header - list of str - header for the individual result data
+            team_header - list of str - header for the team result data
+            meet_header - list of str - header for the meet data
+            ind_data - numpy 2d array of mixed data - data for the individual results
+            team_data - numpy 2d array of mixed data - data for the team results
+            meet_data - numpy list of mixed data - meet information
+
+        Data is saved as self.meet_name + "_" + self.race_name + "_" + str(self.year) + ".npz"
+
+        Return - None
+        """
         ind_data = np.stack((self.names,self.times,self.schools,self.grades,self.qualified),axis = 1)
         team_data = np.stack((self.teams,self.team_scores),axis = 1)
         meet_data = np.array([self.file_name,self.meet_name,self.race_name,
@@ -139,6 +196,15 @@ class Race_Result():
         return 
 
     def load(self,meet_name,race_name,year):
+        """
+        Loads race data into this Race_Result object using:
+
+        meet_name - str - Official meet name
+        race_name - str - Official race name
+        year - int - year of the race
+
+        Return - None
+        """
         fname = meet_name + "_" + race_name + "_" + str(year)
         data = np.load(fname.replace("/","") + ".npz",allow_pickle = True)
         ind_data = data["ind_data"]
