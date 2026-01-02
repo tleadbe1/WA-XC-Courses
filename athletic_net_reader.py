@@ -229,6 +229,13 @@ class Race_Result():
             
 
 def get_race_results(fname):
+    """
+    Read an athletic.net "all results" page of race results and return a list of Race_Result objects with all of the information.
+
+    fname - str - path and name of the file containing the text of the athletic.net "all results" page. 
+
+    Return - list of Race_Result objects - All the results from the input file.
+    """
     with open(fname, mode = "r") as rfile:
         lines = rfile.read().split("\n")
     i = 0
@@ -265,7 +272,5 @@ def get_race_results(fname):
         i += 1 
     return race_results
 
-out = get_race_results("../StatePredictions/WescoConf2025.txt")
-for o in out:
-    o.save()
+
 
