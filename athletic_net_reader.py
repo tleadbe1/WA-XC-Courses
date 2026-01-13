@@ -131,7 +131,7 @@ class Race_Result():
         if "," in dist:
             self.distance = 1000*int(dist.split(",")[0])
         else:
-            self.distance = 1609.344*int(dist)
+            self.distance = 1609.344*float(dist)
         if "varsity" in race_name.lower() or "elite" in race_name.lower():
             self.varsity = True
         if "Official Team Scores" in data[1]:
