@@ -195,6 +195,43 @@ class Race_Result():
                                                                 ind_header = ind_header,team_header = team_header,meet_header = meet_header)
         return 
 
+    def save_csv(self):
+        """
+        Saves the Race_Result as multiple csv files:
+
+            ind_data - numpy 2d array of mixed data - data for the individual results
+            team_data - numpy 2d array of mixed data - data for the team results
+            meet_data - numpy list of mixed data - meet information
+
+        Data is saved as self.meet_name + "_" + self.race_name + "_" + str(self.year) + "_" + "*_data".csv"
+            where * is either ind, team, or meet. 
+
+        Note that currently one can only load data from npz files and not csv files.
+
+        Return - None
+        """
+        ind_data = np.stack((self.names,self.times,self.schools,self.grades,self.qualified),axis = 1)
+        team_data = np.stack((self.teams,self.team_scores),axis = 1)
+        meet_data = np.array([self.file_name,self.meet_name,self.race_name,
+                             self.meet_location,str(self.year),str(self.distance),
+                              str(self.boys),str(self.varsity)])
+        ind_header = np.array(["Name","Time","School","Grade","Qualified"])
+        team_header = np.array(["Team","score"])
+        meet_header = np.array(["File Name","Meet Name","Race Name",
+                                "Meet Location","Year","Distance",
+                                "Is Boys","Is Varsity"])
+        fname = self.meet_name + "_" + self.race_name + "_" + str(self.year) 
+        pre = ["ind","team","meet"]
+        data = [ind_data,team_data,meet_data]
+        header = [ind_header,team_header,meet_header]
+        for p,d,h in zip(pre,data,header):
+            with open(fname.replace("/","") + "_" + p + "_data.csv",mode = "w") as wfile:
+                writer = csv.writer(wfile)
+                writer.writerow(h)
+                for line in d:
+                    writer.writerow(line)
+        return 
+
     def load(self,meet_name,race_name,year):
         """
         Loads race data into this Race_Result object using:
