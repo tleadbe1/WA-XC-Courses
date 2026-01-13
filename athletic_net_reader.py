@@ -1,5 +1,7 @@
 import numpy as np
 import csv
+import os
+import pandas as pd
 
 def parse_time(t):
     s = t.split(":")
@@ -231,6 +233,110 @@ class Race_Result():
                 for line in d:
                     writer.writerow(line)
         return 
+
+    def save_to_db(self): # TAG1
+        """
+        Saves the race data to base csv files for storage and SQL querying.
+        """
+
+        if os.path.isfile("schools.csv"):
+            schools = pd.read_csv("schools.csv",dtype = {"school_id":np.int32,"name":str,"classification":str,"district":np.int32,"avg_enrollment":np.float32})
+        else:
+            print("No information on schools found. Quitting.")
+            return
+        
+        if os.path.isfile("athletes.csv"):
+            athletes = pd.read_csv("athletes.csv",dtype = {"athlete_id":np.int32,"first_name":str,"last_name":str,"school_id":np.int32,"grade":np.int32})
+
+        else:
+            athletes = pd.DataFrame(columns = ["athlete_id","first_name","last_name","school_id","grade"])
+        
+        if os.path.isfile("courses.csv"):
+            courses = pd.read_csv("courses.csv",dtype = {"course_id":np.int32,"name":str})
+        else:
+            courses = pd.DataFrame(columns = ["course_id","name"])
+        
+        if os.path.isfile("meets.csv"):
+            meets = pd.read_csv("meets.csv",dtype = {"meet_id":np.int32,"course_id":np.int32,"name":str})
+        else:
+            meets = pd.DataFrame(columns = ["meet_id","course_id","name"])
+
+        if os.path.isfile("races.csv"):
+            races = pd.read_csv("races.csv",dtype = {"race_id":np.int32,"meet_id":np.int32,"name":str,"distance_km":np.float32,"is_varsity":bool})
+        else:
+            races = pd.DataFrame(columns = ["race_id","meet_id","name","distance_km","is_varsity"])
+        
+        if os.path.isfile("race_results.csv"):
+            race_results = pd.read_csv("race_results.csv",dtype = {"race_id":np.int32,"athlete_id":np.int32,"time_sec":np.float32,"qualified":bool})
+        else:
+            race_results = pd.DataFrame(columns = ["race_id","athlete_id","time_sec","qualified"])
+        
+        
+        # Check if course has been added yet
+        if (courses["name"] == self.meet_location).any(): 
+            course_id = int(courses["course_id"][courses["name"] == self.meet_location].iloc[0])
+        else:
+            if len(courses["course_id"]) == 0:
+                course_id = 1
+            else:
+                course_id = np.max(courses["course_id"]) + 1
+            new_row = pd.DataFrame({"course_id":[course_id,],"name":[self.meet_location,]})
+            courses = pd.concat([courses,new_row],ignore_index = True)
+
+        # Check if meet has been added yet
+        
+        if (meets["name"] == self.meet_name).any(): 
+            meet_id = int(meets["meet_id"][meets["name"] == self.meet_name].iloc[0])
+        else:
+            if len(meets["meet_id"]) == 0:
+                meet_id = 1
+            else:
+                meet_id = np.max(meets["meet_id"]) + 1
+            new_row = pd.DataFrame({"meet_id":[meet_id,],"course_id":[course_id,],"name":[self.meet_name,]})
+            meets = pd.concat([meets,new_row],ignore_index = True)
+
+        # Will always be a new race so just get new index
+
+        if len(races["race_id"]) == 0:
+            race_id = 1
+        else:
+            race_id = np.max(races["race_id"]) + 1
+
+        new_row = pd.DataFrame({"race_id":[race_id,],"meet_id":[meet_id,],"name":[self.race_name,],"distance_km":[self.distance/1000,],"is_varsity":[self.varsity,]})
+        races = pd.concat([races,new_row],ignore_index = True)
+    
+        # TAG2
+        for name,time,school,grade,q in zip(self.names,self.times,self.schools,self.grades,self.qualified):
+            if not (schools["name"].str.contains(school,regex = False)).any():
+                continue
+            school_id = int(schools[schools["name"].str.contains(school,regex = False)]["school_id"].iloc[0])
+
+            first_name = name.split(" ")[0]   
+            last_name = name[len(first_name)+1:]
+            if ((athletes["first_name"] == first_name)*(athletes["last_name"] == last_name)*(athletes["school_id"] == school_id)).any():
+                athlete_id = int(athletes["athlete_id"][((athletes["first_name"] == first_name)*(athletes["last_name"] == last_name)*(athletes["school_id"] == school_id))].iloc[0])
+            else:
+                if len(athletes["athlete_id"]) == 0:
+                    athlete_id = 1
+                else:
+                    athlete_id = np.max(athletes["athlete_id"]) + 1
+                try:
+                    _ = int(grade)
+                except:
+                    grade = 0
+                new_row = pd.DataFrame({"athlete_id":[athlete_id,],"first_name":[first_name,],"last_name":[last_name,],"school_id":[school_id,],"grade":[grade,]})
+                athletes = pd.concat([athletes,new_row],ignore_index = True)
+
+            new_row = pd.DataFrame({"race_id":[race_id,],"athlete_id":[athlete_id,],"time_sec":[time,],"qualified":[q,]})
+            race_results = pd.concat([race_results,new_row],ignore_index = True)
+
+        courses.to_csv("courses.csv",index = False)
+        meets.to_csv("meets.csv",index = False)
+        races.to_csv("races.csv",index=  False)
+        race_results.to_csv("race_results.csv",index = False)
+        athletes.to_csv("athletes.csv",index = False)
+        return         
+
 
     def load(self,meet_name,race_name,year):
         """
